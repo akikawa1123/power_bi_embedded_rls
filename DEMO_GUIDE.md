@@ -2,20 +2,21 @@
 
 このガイドに従うことで、誰でもこのデモを自分の環境で再現できます。
 
+> 📦 **`SampleReport/Artificial Intelligence Sample.pbix` を同梱しています。**  
+> レポートを自作することなく、このファイルを発行するだけでデモを開始できます。
+
 ---
 
-## 📋 全体の流れ（所要時間: 約30分）
+## 📋 全体の流れ（所要時間: 約20分）
 
 ```
 [ステップ1] Azure ADアプリ登録（5分）
       ↓
-[ステップ2] Power BI Desktop でレポートとRLS設定を作成（10分）
+[ステップ2] SampleReport を発行・ID取得・Service Principal 追加（5分）
       ↓
-[ステップ3] レポートを Power BI Service / Fabric に発行（2分）
+[ステップ3] Python環境のセットアップ（5分）
       ↓
-[ステップ4] Python環境のセットアップ（5分）
-      ↓
-[ステップ5] config.py を設定して実行（5分）
+[ステップ4] config.py を設定して実行（5分）
       ↓
 [完成] ブラウザで顧客ごとのデータを確認！
 ```
@@ -29,7 +30,10 @@
 | Power BI Pro または Fabric ライセンス | Microsoft 365 / M365 開発者テナント可 |
 | Azure AD（Entra ID）へのアクセス | アプリ登録の権限が必要 |
 | Python 3.8以上 | https://www.python.org/downloads/ |
-| Power BI Desktop | https://aka.ms/pbidesktop |
+| Power BI Desktop | https://aka.ms/pbidesktop （SampleReport の発行に使用） |
+
+> ✅ **Power BI Desktop でレポートを自作する必要はありません。**  
+> `SampleReport/Artificial Intelligence Sample.pbix` をそのまま発行してください。
 
 ---
 
@@ -80,9 +84,51 @@
 
 ---
 
-## ステップ2: Power BI Desktop でレポートを作成
+## ステップ2: SampleReport を Power BI Service に発行
 
-### 2-1. サンプルデータの準備
+> 📦 このリポジトリには `SampleReport/Artificial Intelligence Sample.pbix` が含まれています。  
+> レポートを自作する必要はありません。以下の手順でそのまま発行できます。
+
+### 2-1. SampleReport を Power BI Desktop で開く
+
+1. エクスプローラーで `SampleReport/Artificial Intelligence Sample.pbix` をダブルクリック
+2. Power BI Desktop が起動してレポートが開く
+
+> Power BI Desktop が未インストールの場合は https://aka.ms/pbidesktop からダウンロードしてください。
+
+### 参考: レポートに含まれる RLS 設定
+
+サンプルレポートには以下の RLS ロールが設定されています:
+
+- ロール名: `CustomerRole`
+- DAX 式:
+
+```dax
+IF(
+    USERNAME() = "customer_a",
+    [Category] = "Software",
+    IF(
+        USERNAME() = "customer_b",
+        [Category] = "Hardware",
+        TRUE()
+    )
+)
+```
+
+| username | 表示されるデータ |
+|----------|----------------|
+| `customer_a` | Software のみ |
+| `customer_b` | Hardware のみ |
+| `customer_c` | すべて |
+
+> 独自のデータや RLS ロールに変更したい場合は、**モデリング** → **ロールの管理** から編集してください。
+
+### 元の手順: Power BI Desktop でレポートを自作する場合（参考）
+
+<details>
+<summary>クリックして展開</summary>
+
+### サンプルデータの準備
 
 Power BI Desktopを開いて「データを入力」でサンプルテーブルを作成します。
 
@@ -132,7 +178,7 @@ IF(
 
 5. **保存** をクリック
 
-### 2-4. RLS の動作をテスト（重要！）
+### RLS の動作をテスト（重要！）
 
 1. **モデリング** → **ロールとして表示** をクリック
 2. **CustomerRole** にチェックを入れる
@@ -142,17 +188,15 @@ IF(
 6. `customer_b` でも同様にテスト → **Hardware のみ** 表示を確認 ✅
 7. 表示の停止: **ロールとして表示** → **なし** に変更
 
----
+</details>
 
-## ステップ3: Power BI Service / Fabric に発行
-
-### 3-1. レポートを発行
+### 2-2. レポートを Power BI Service に発行
 
 1. Power BI Desktop で **ホーム** → **発行** をクリック
 2. 発行先のワークスペースを選択（または新規作成）
 3. 「発行に成功しました」メッセージを確認
 
-### 3-2. Workspace ID と Report ID を取得
+### 2-3. Workspace ID と Report ID を取得
 
 1. https://app.powerbi.com（または https://app.fabric.microsoft.com）にアクセス
 2. 発行したワークスペースを開く
@@ -166,7 +210,7 @@ https://app.powerbi.com/groups/{WORKSPACE_ID}/reports/{REPORT_ID}/...
    - `WORKSPACE_ID`: `groups/` の後の `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
    - `REPORT_ID`: `reports/` の後の `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
 
-### 3-3. Service Principal をワークスペースに追加
+### 2-4. Service Principal をワークスペースに追加
 
 1. ワークスペースの右上 **...** → **ワークスペースのアクセス管理**（または **アクセス**）
 2. **ユーザーまたはグループを追加**
@@ -174,20 +218,20 @@ https://app.powerbi.com/groups/{WORKSPACE_ID}/reports/{REPORT_ID}/...
 4. 役割: **メンバー** または **共同作成者** を選択
 5. **追加** をクリック
 
-### 3-4. RLS ロールの確認
+### 2-5. RLS ロールの確認
 
 1. ワークスペースでデータセット（またはセマンティックモデル）を見つける
 2. `...` → **セキュリティ** をクリック
-3. **CustomerRole** が表示されることを確認
+3. **CustomerRole** が表示されることを確認（SampleReport を発行すれば自動で反映）
 4. **メンバーは空（0）のままでOK** ← Embedded では不要
 
 > ✅ ここが重要ポイント: メンバーにユーザーを追加しなくても、Pythonアプリから動的にユーザーを指定できます。
 
 ---
 
-## ステップ4: Python 環境のセットアップ
+## ステップ3: Python 環境のセットアップ
 
-### 4-1. 依存パッケージのインストール
+### 3-1. 依存パッケージのインストール
 
 コマンドプロンプトまたはターミナルを開いて:
 
@@ -203,9 +247,9 @@ pip install -r ../requirements.txt
 
 ---
 
-## ステップ5: config.py を設定して実行
+## ステップ4: config.py を設定して実行
 
-### 5-1. config.py を編集
+### 4-1. config.py を編集
 
 [AppOwnsData/config.py](AppOwnsData/config.py) をテキストエディタで開き、以下の値を設定:
 
@@ -214,8 +258,8 @@ class BaseConfig(object):
 
     AUTHENTICATION_MODE = 'ServicePrincipal'  # ← このまま変更不要
 
-    WORKSPACE_ID = 'xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'  # ← ステップ3-2でコピーした値
-    REPORT_ID = 'xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'     # ← ステップ3-2でコピーした値
+    WORKSPACE_ID = 'xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'  # ← ステップ2-3でコピーした値
+    REPORT_ID = 'xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'     # ← ステップ2-3でコピーした値
     TENANT_ID = 'xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'     # ← ステップ1-1でメモした値
     CLIENT_ID = 'xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'     # ← ステップ1-1でメモした値
     CLIENT_SECRET = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' # ← ステップ1-2でメモした値
@@ -240,14 +284,14 @@ class BaseConfig(object):
     }
 ```
 
-### 5-2. アプリを起動
+### 4-2. アプリを起動
 
 ```bash
 cd "c:\work\embedded\Python\Embed for your customers\AppOwnsData"
 python app.py
 ```
 
-### 5-3. ブラウザで確認
+### 4-3. ブラウザで確認
 
 1. http://localhost:5000 を開く
 2. ドロップダウンから **顧客A** を選択
@@ -262,11 +306,11 @@ python app.py
 
 設定がうまくいかない場合、以下の順番で確認してください:
 
-- [ ] Power BI Desktopで「ロールとして表示」→ `customer_a` でSoftwareのみ表示される
+- [ ] `SampleReport/Artificial Intelligence Sample.pbix` が Power BI Service に発行されている
 - [ ] `config.py` の5つのID/Secretが正しく設定されている
 - [ ] Service Principal（アプリ）がワークスペースに追加されている（メンバーまたは共同作成者）
 - [ ] Power BI管理ポータルで「サービスプリンシパルによるAPI使用」が有効になっている
-- [ ] Power BI ServiceにロールCard「CustomerRole」が存在する（発行済み）
+- [ ] Power BI Serviceにロール「CustomerRole」が存在する（SampleReport を発行すれば自動で反映）
 - [ ] ロールの**メンバーは空（0）のまま**（これが正常）
 
 ---
@@ -346,6 +390,9 @@ print(json.dumps(request_body.__dict__, indent=2))
 ## 📂 ファイル構成
 
 ```
+SampleReport/
+└── Artificial Intelligence Sample.pbix  ← デモ用サンプルレポート（RLS設定済み）
+
 AppOwnsData/
 ├── app.py                  ← Flaskアプリ本体・APIエンドポイント定義
 ├── config.py               ← 設定ファイル（★ここを編集）

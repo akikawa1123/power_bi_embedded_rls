@@ -2,6 +2,9 @@
 
 1つのレポート・1つのデータセットで、顧客ごとに異なるデータを表示する **Power BI Embedded RLS** のデモアプリです。
 
+> 📦 **`SampleReport/Artificial Intelligence Sample.pbix` を同梱しています。**  
+> Power BI Desktop でレポートを自作しなくても、このファイルを Power BI Service に発行するだけでデモを開始できます。
+
 **デモシナリオ:**
 | 顧客 | 表示されるデータ |
 |------|----------------|
@@ -10,7 +13,7 @@
 | 顧客C（統括本部） | すべてのデータ |
 
 > 🚀 **はじめての方は [DEMO_GUIDE.md](DEMO_GUIDE.md) を参照してください。**  
-> Azure AD設定からPower BI Desktop・config.py設定まで、ゼロから再現できる手順書です。
+> Azure AD設定・SampleReport の発行・config.py 設定まで、ゼロから再現できる手順書です。
 
 ---
 
@@ -46,6 +49,9 @@
 ## 📂 ファイル構成
 
 ```
+SampleReport/
+└── Artificial Intelligence Sample.pbix  ← デモ用サンプルレポート（RLS設定済み）
+
 AppOwnsData/
 ├── app.py              ← Flask本体・APIエンドポイント (/getembedinfo_rls, /getcustomers)
 ├── config.py           ← 設定ファイル ★ここを編集
