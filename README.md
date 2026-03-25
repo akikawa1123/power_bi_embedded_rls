@@ -9,11 +9,11 @@
 | 顧客 | 表示されるデータ |
 |------|----------------|
 | 顧客A（ソフトウェア事業部） | Category = "Software" のみ |
-| 顧客B（ハードウェア事業部） | Category = "Hardware" のみ |
+| 顧客B（家具事業部） | Category = "Furniture" のみ |
 | 顧客C（統括本部） | すべてのデータ |
 
 > 🚀 **はじめての方は [DEMO_GUIDE.md](DEMO_GUIDE.md) を参照してください。**  
-> Azure AD設定・SampleReport の発行・config.py 設定まで、ゼロから再現できる手順書です。
+> Microsoft Entra ID設定・SampleReport の発行・config.py 設定まで、ゼロから再現できる手順書です。
 
 ---
 
@@ -34,7 +34,7 @@
     ↓  POST /getembedinfo_rls {"customerId": "customer_a"}
 [Flask サーバー]
     ↓  config.py から username / roles を取得
-    ↓  Azure AD → Bearer Token 取得 (MSAL)
+    ↓  Microsoft Entra ID → Bearer Token 取得 (MSAL)
     ↓  Power BI GenerateToken API 呼び出し
        EffectiveIdentity: {username: "customer_a", roles: ["CustomerRole"]}
 [Power BI API]
@@ -89,7 +89,7 @@ IF(
     [Category] = "Software",
     IF(
         USERNAME() = "customer_b",
-        [Category] = "Hardware",
+        [Category] = "Furniture",
         TRUE()   // その他のユーザーは全データ表示
     )
 )

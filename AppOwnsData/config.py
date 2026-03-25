@@ -33,6 +33,8 @@ class BaseConfig(object):
     # Master user email password. Required only for MasterUser authentication mode.
     POWER_BI_PASS = ''
 
+
+
     # Customer mapping for Row-Level Security (RLS) demo
     # Each customer has:
     # - name: Display name for the customer
@@ -50,7 +52,7 @@ class BaseConfig(object):
             'roles': ['CustomerRole']
         },
         'customer_b': {
-            'name': '顧客B - ハードウェア事業部',
+            'name': '顧客B - 家具事業部',
             'username': 'customer_b',
             'roles': ['CustomerRole']
         },
